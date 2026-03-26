@@ -35,7 +35,7 @@ def detect_vol_regime(
     pd.DataFrame — columns: ['return', 'realised_vol', 'state', 'regime_label']
     """
     realised_vol = port_ret.rolling(roll_window).std().dropna()
-    abs_ret      = port_ret.abs().loc[realised_vol.index]
+    abs_ret      = port_ret.abs().reindex(realised_vol.index).fillna(0)
 
     # 2D feature: [realised_vol, abs_return]
     feature = np.column_stack([realised_vol.values, abs_ret.values])
