@@ -59,5 +59,7 @@ def build_portfolio(tickers: list, lookback_days: int = 252) -> pd.DataFrame:
 
     series_list = [_fetch_ticker(t, start_date, end_date) for t in tickers]
     prices = pd.concat(series_list, axis=1)
+    prices = prices[~prices.index.duplicated(keep='last')]
+    prices = prices.sort_index()
     prices = prices.ffill().dropna(how="all")
     return prices

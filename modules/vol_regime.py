@@ -34,6 +34,7 @@ def detect_vol_regime(
     -------
     pd.DataFrame — columns: ['return', 'realised_vol', 'state', 'regime_label']
     """
+    port_ret     = port_ret[~port_ret.index.duplicated(keep='last')].sort_index()
     realised_vol = port_ret.rolling(roll_window).std().dropna()
     abs_ret      = port_ret.abs().reindex(realised_vol.index).fillna(0)
 
