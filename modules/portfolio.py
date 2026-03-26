@@ -37,4 +37,5 @@ def build_portfolio(tickers: list, lookback_days: int = 252) -> pd.DataFrame:
         raw = raw.to_frame(name=tickers[0])
 
     prices = raw.dropna(how="all").ffill()
+
     return prices
