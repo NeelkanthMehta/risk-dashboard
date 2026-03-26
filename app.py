@@ -34,9 +34,6 @@ tickers, weights, lookback = sidebar.render()
 
 # ── Data fetch + returns ──────────────────────────────────────────────────────
 prices = build_portfolio(tickers, lookback)
-st.write(f"Rows fetched: {len(prices)}, Tickers: {prices.columns.tolist()}")
-st.write(prices.tail(3))
-st.stop()
 
 if prices.empty or len(prices) < 10:
     st.error("No price data returned for the selected tickers. Check that tickers use the '.NS' suffix (e.g. RELIANCE.NS) and try again.")
