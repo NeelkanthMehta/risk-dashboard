@@ -1,7 +1,6 @@
 """
 portfolio.py
 Fetches OHLCV price data for a list of NSE tickers via yfinance.
-Returns a DataFrame of adjusted close prices.
 """
 
 from datetime import date, timedelta
@@ -12,16 +11,6 @@ import streamlit as st
 
 @st.cache_data(ttl=3600, show_spinner="Fetching price data…")
 def build_portfolio(tickers: list, lookback_days: int = 252) -> pd.DataFrame:
-    """
-    Parameters
-    ----------
-    tickers       : list of NSE tickers, e.g. ['RELIANCE.NS', 'TCS.NS']
-    lookback_days : trading days of history to pull
-
-    Returns
-    -------
-    prices : pd.DataFrame  — daily adjusted close, columns = tickers
-    """
     end_date   = date.today()
     start_date = end_date - timedelta(days=int(lookback_days * 1.6))
 
@@ -31,11 +20,25 @@ def build_portfolio(tickers: list, lookback_days: int = 252) -> pd.DataFrame:
         end=end_date.strftime("%Y-%m-%d"),
         auto_adjust=True,
         progress=False,
-    )["Close"]
+        group_by="ticker",
+    )
 
-    if isinstance(raw, pd.Series):
-        raw = raw.to_frame(name=tickers[0])
+    # Handle both flat and MultiIndex column structures
+    if isinstance(raw.columns, pd.MultiIndex):
+        # New yfinance: columns are (ticker, field) — extract Close for each
+        frames = {}
+        for t in tickers:
+            try:
+                frames[t] = raw[t]["Close"]
+            except KeyError:
+                pass
+        prices = pd.DataFrame(frames)
+    else:
+        prices = raw["Close"] if "Close" in raw.columns else raw
 
-    prices = raw.dropna(how="all").ffill()
+    if isinstance(prices, pd.Series):
+        prices = prices.to_frame(name=tickers[0])
 
+    # Drop rows where ALL tickers are NaN, then forward-fill gaps
+    prices = prices.dropna(how="all").ffill().dropna(how="all")
     return prices
