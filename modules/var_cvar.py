@@ -10,7 +10,7 @@ import pandas as pd
 
 def compute_var_cvar(
     port_ret: pd.Series,
-    confidence_levels: tuple[float, ...] = (0.95, 0.99),
+    confidence_levels: tuple = (0.95, 0.99),
     holding_period: int = 1,
 ) -> dict:
     """
@@ -34,15 +34,21 @@ def compute_var_cvar(
     var_results  = {}
     cvar_results = {}
 
-    for cl in confidence_levels:
-        cutoff = np.percentile(r, (1 - cl) * 100)
-        var_results[cl]  = cutoff * scale
-        cvar_results[cl] = r[r <= cutoff].mean() * scale
+    if len(r) < 10:
+        for cl in confidence_levels:
+            var_results[cl]  = float("nan")
+            cvar_results[cl] = float("nan")
+    else:
+        for cl in confidence_levels:
+            cutoff = np.percentile(r, (1 - cl) * 100)
+            var_results[cl]  = cutoff * scale
+            tail = r[r <= cutoff]
+            cvar_results[cl] = tail.mean() * scale if len(tail) > 0 else float("nan")
 
     return {
-        "var":      var_results,
-        "cvar":     cvar_results,
-        "returns":  pd.Series(r, index=port_ret.dropna().index),
-        "hp_scale": scale,
+        "var":               var_results,
+        "cvar":              cvar_results,
+        "returns":           port_ret.dropna(),
+        "hp_scale":          scale,
         "confidence_levels": confidence_levels,
     }

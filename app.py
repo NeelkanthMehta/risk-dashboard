@@ -33,8 +33,13 @@ import ui.layout    as layout
 tickers, weights, lookback = sidebar.render()
 
 # ── Data fetch + returns ──────────────────────────────────────────────────────
-prices    = build_portfolio(tickers, lookback)
-ret       = compute_returns(prices, weights)
+prices = build_portfolio(tickers, lookback)
+
+if prices.empty or len(prices) < 10:
+    st.error("No price data returned for the selected tickers. Check that tickers use the '.NS' suffix (e.g. RELIANCE.NS) and try again.")
+    st.stop()
+
+ret = compute_returns(prices, weights)
 
 # ── Analytics ────────────────────────────────────────────────────────────────
 factors    = compute_factor_exposure(prices, weights)
