@@ -25,6 +25,18 @@ def compute_drawdown(port_ret: pd.Series) -> dict:
       'max_dd_end'     — date  (first recovery date, or None if unrecovered)
       'recovery_days'  — int or None
     """
+    if port_ret.dropna().empty:
+        return {
+            "drawdown":      pd.Series(dtype=float),
+            "cum_return":    pd.Series(dtype=float),
+            "max_drawdown":  float("nan"),
+            "avg_drawdown":  float("nan"),
+            "max_dd_start":  None,
+            "max_dd_trough": None,
+            "max_dd_end":    None,
+            "recovery_days": None,
+        }
+
     cum = port_ret.cumsum().apply(np.exp)          # wealth index
     rolling_max = cum.cummax()
     drawdown = (cum / rolling_max) - 1             # 0 at new highs, negative in drawdown
